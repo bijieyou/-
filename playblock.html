@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>playBlock</title>
+
+    <style>
+        body {
+            background-image: url('星空.jpg');
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        
+        .fix {
+            width: 800px;
+            position: fixed;
+            font-size: 100px;
+            color: red;
+            text-align: center;
+            background-color: yellow;
+            line-height: 160px;
+            top: calc(50% - 80px);
+            left: calc(50% - 400px);
+            cursor: pointer;
+        }
+        
+        .boundary {
+            margin: 0px auto;
+            width: 600px;
+        }
+        
+        .boundary::after {
+            content: '';
+            display: block;
+            clear: both;
+        }
+        
+        #trust {
+            width: 190px;
+            height: 40px;
+            float: right;
+            text-align: center;
+            line-height: 40px;
+        }
+        
+        #trust:hover {
+            background-color: blueviolet;
+        }
+        
+        #state {
+            width: 190px;
+            height: 50px;
+            text-align: center;
+            color: blueviolet;
+            float: right;
+        }
+        
+        .bor {
+            width: 400px;
+            height: 600px;
+            float: left;
+            border: 3px solid blueviolet;
+            position: relative;
+        }
+        
+        .block {
+            width: 44px;
+            height: 19px;
+            position: absolute;
+            background: blueviolet;
+            margin: 2px;
+            border: 1px solid yellowgreen;
+        }
+        
+        #ball {
+            width: 20px;
+            height: 20px;
+            background: orangered;
+            border-radius: 50%;
+            position: absolute;
+        }
+        
+        #tray {
+            width: 70px;
+            height: 20px;
+            background-color: cornflowerblue;
+            position: absolute;
+            top: 580px;
+            left: 165px;
+        }
+        
+        #accelerate,
+        #slow {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            line-height: 20px;
+            font-size: 16px;
+            text-align: center;
+            color: seashell;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        
+        #accelerate {
+            left: 0px;
+            top: 506px;
+            background-color: red;
+        }
+        
+        #accelerate:hover {
+            -webkit-animation: forwardRotate 5s infinite;
+        }
+        
+        #slow:hover {
+            -webkit-animation: backRotate 5s infinite;
+        }
+        
+        @-webkit-keyframes forwardRotate {
+            100% {
+                -webkit-transform: rotate(3600deg);
+            }
+        }
+        
+        @-webkit-keyframes backRotate {
+            100% {
+                -webkit-transform: rotate(-3600deg);
+            }
+        }
+        
+        #slow {
+            left: 366px;
+            top: 506px;
+            background-color: cornflowerblue;
+        }
+        
+        .tell {
+            position: absolute;
+            border: 2px solid yellow;
+            width: 320px;
+            height: 20px;
+            text-align: center;
+            line-height: 20px;
+            font-size: 16px;
+            top: 546px;
+            left: 40px;
+            color: palegreen;
+        }
+        
+        .triangle {
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid yellow;
+            position: absolute;
+            left: 190px;
+            top: 570px;
+        }
+    </style>
+
+    <script>
+        onload = function() {
+            //初始化小球随机位置
+            var x = parseInt(Math.random() * 280);
+            var y = parseInt(Math.random() * 180) + 200;
+            console.log(x + ' ' + y);
+            var ball = document.getElementById('ball');
+            ball.style.left = x + 'px';
+            ball.style.top = y + 'px';
+            var fraction = 0;
+            //点击加快
+            var accelerate = document.getElementById('accelerate');
+            var move = null;
+            var speed = 100;
+            accelerate.onclick = function() {
+                    if (move == null)
+                        return;
+                    speed = speed > 20 ? speed - 20 : speed;
+                    speed = speed > 5 ? speed - 2 : speed;
+
+                    clearInterval(move);
+                    move = setInterval(function() {
+                        startmove();
+                    }, speed);
+                }
+                //点击托管
+            var trustState = false;
+            var trust = document.getElementById('trust');
+            trust.onclick = function() {
+                    trustState = !trustState;
+                    if (trustState) {
+                        if (move != null) clearInterval(move);
+                        document.onmousemove = null;
+                        move = setInterval(function() {
+                            startmove();
+                        }, speed);
+                    } else {
+                        clearInterval(move);
+                        move = null;
+                    }
+                }
+                //点击减速
+            var slow = document.getElementById('slow');
+            slow.onclick = function() {
+                if (move == null)
+                    return;
+                speed = speed < 500 ? speed + 20 : speed;
+                clearInterval(move);
+                move = setInterval(function() {
+                    startmove();
+                }, speed);
+            }
+
+            //初始随机小球速度
+            var speedx = null,
+                speedy = null;
+            do {
+                speedx = (parseInt(Math.random() * 7) - 3) * 2;
+                speedy = parseInt(Math.sqrt(81 - speedx * speedx));
+            } while (speedx == 0 || speedy == 0);
+
+
+            //方块颜色随机函数
+            var randomcolor = function() {
+                var colors = '0123456789ABCDEF';
+                color = '#';
+                for (var i = 0; i < 6; i++)
+                    color += colors[parseInt(Math.random() * 16)];
+                return color;
+            }
+
+
+            //方块排列并记录方块信息
+            var bor = document.getElementsByClassName('bor')[0];
+            for (var i = 0; i < 64; i++) {
+                var div = document.createElement('div');
+                div.id = 'A' + i;
+                div.className = 'block';
+                var row = parseInt(i / 8),
+                    col = i % 8;
+                //px单位不要忘记
+                div.style.top = row * 25 + 'px';
+                div.style.left = col * 50 + 'px';
+                console.log(row * 25 + ',' + col * 50);
+                div.style.background = randomcolor();
+                bor.appendChild(div);
+            }
+
+            //碰撞函数
+            var collide = function(div1, div2) {
+                var div1left = div1.offsetLeft;
+                var div1right = div1.offsetWidth + div1left;
+                var div1top = div1.offsetTop;
+                var div1bottom = div1.offsetHeight + div1top;
+
+                var div2left = div2.offsetLeft;
+                var div2right = div2.offsetWidth + div2left;
+                var div2top = div2.offsetTop;
+                var div2bottom = div2.offsetHeight + div2top;
+                console.log(' ' + div1left + ' ' + div1right + ' ' + div1top + ' ' + div1bottom);
+                console.log(' ' + div2left + ' ' + div2right + ' ' + div2top + ' ' + div2bottom);
+
+                if (div1left > div2right || div2left > div1right ||
+                    div1bottom < div2top || div2bottom < div1top)
+                    return false;
+                else return true;
+            }
+
+            var tray = document.getElementById('tray');
+            //小球运动方式
+            var startmove = function() {
+                x += speedx;
+                y += speedy;
+                ball.style.left = x + 'px';
+                ball.style.top = y + 'px';
+                if (x <= 0 || x >= 380) speedx *= -1;
+                if (y <= 10) speedy *= -1;
+                if (collide(ball, tray))
+                    speedy *= -1;
+
+                if (y >= 580) {
+                    clearInterval(move);
+                    alert('GAME OVER');
+                    window.location.reload();
+                }
+                var f = 0,
+                    test = /^[A][0-9]*/;
+                var divs = bor.childNodes;
+                for (var i = 0; i < divs.length; i++) {
+                    if (test.test(divs[i].id)) {
+                        f = 1;
+                        if (collide(divs[i], ball)) {
+                            speedy *= -1;
+                            bor.removeChild(divs[i]);
+                            fraction += 10;
+                            break;
+                        }
+                    }
+                }
+                if (f == 0) {
+                    clearInterval(move);
+                    alert('YOU WIN!');
+                    window.location.reload();
+                }
+                if (trustState) {
+                    var left = x - 25;
+                    left = left < 0 ? 0 : left;
+                    left = left > 330 ? 330 : left;
+                    tray.style.left = left + 'px';
+                }
+                var state = document.getElementById('state');
+                state.innerHTML = '速度:' + parseInt(1000 * 9 / speed) + 'px/s' + '<br>分数:' + fraction;
+            }
+
+            //托盘移动(点击托盘后托盘会跟随鼠标移动，再次点击会取消)
+            tray.onclick = function(e) {
+                if (trustState) {
+                    document.onmousemove = null;
+                    return;
+                }
+                e = e || window.event;
+                var dx = e.clientX - (tray.offsetLeft + bor.offsetLeft);
+                if (document.onmousemove != null) {
+                    document.onmousemove = null;
+                    clearInterval(move);
+                    move = null;
+                    return;
+                }
+                document.onmousemove = function(ev) {
+                    ev = ev || window.event;
+                    var left = ev.clientX - dx - bor.offsetLeft;
+                    left = left < 0 ? 0 : left;
+                    left = left > 330 ? 330 : left;
+                    tray.style.left = left + 'px';
+                }
+
+                move = setInterval(function() {
+                    startmove();
+                }, speed);
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div class="boundary">
+        <div class='bor'>
+            <div id="ball"></div>
+            <div class="tell"><span>点击我开始暂停,我会跟随鼠标!</span></div>
+            <button id="accelerate">点我加速</button>
+            <button id="slow">点我减速</button>
+            <div class="triangle"></div>
+            <div id='tray'></div>
+        </div>
+        <div id="state">速度:0px/s <br>分数:0 </div>
+        <button id='trust'>开启/取消托管</button>
+    </div>
+</body>
+
+</html>

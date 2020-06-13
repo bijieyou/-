@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id='form'>
+        <table>
+            <caption>
+                输入行列数随机生成迷宫
+            </caption>
+            <tr>
+                <td>行数</td>
+                <td><input type="text" id='row' value="5" style="width: 60px;"></td>
+                <td>列数</td>
+                <td><input type="text" id='col' value="5" style="width: 60px;"></td>
+                <td><input type="button" value="随机" onclick="randomRowandCol()"></td>
+                <td><input type="button" value="生成" onclick="checkRowandCol()"></td>
+            </tr>
+        </table>
+        <button onclick="calculation()">显示最短路径</button>
+    </div>
+    <div id="title">
+        <div class="cornsilk"></div>为通路&nbsp;
+        <div class="black"></div>为障碍&nbsp;
+        <div class="CornflowerBlue"></div>为起点&nbsp;
+        <div class="OrangeRed"></div>为终点&nbsp;
+        <div class="Silver"></div>为路径&nbsp;
+    </div>
+    <div id="maze">
+
+    </div>
+    <div id="result"></div>
+</body>
+
+<style>
+    #form {
+        margin: 10px auto;
+        text-align: center;
+        background-color: teal;
+        width: 500px;
+    }
+    
+    #maze {
+        margin: 10px auto;
+        position: relative;
+    }
+    
+    .square {
+        width: 46px;
+        height: 46px;
+        margin: 2px;
+        box-sizing: border-box;
+        border: 1px solid black;
+        background-color: cornsilk;
+        position: absolute;
+        font-size: 20px;
+        line-height: 20px;
+        text-align: center;
+        color: orange;
+    }
+    
+    #result,
+    #title {
+        margin: 10px auto;
+        color: crimson;
+        font-size: 20px;
+        line-height: 20px;
+        text-align: center;
+        width: 120px;
+        height: 40px;
+    }
+    
+    #title {
+        width: 250px;
+        color: burlywood;
+    }
+    
+    .CornflowerBlue,
+    .black,
+    .cornsilk,
+    .OrangeRed,
+    .Silver {
+        width: 20px;
+        height: 20px;
+        display: inline-block;
+    }
+    
+    .CornflowerBlue {
+        background-color: cornflowerblue;
+    }
+    
+    .black {
+        background-color: black;
+    }
+    
+    .cornsilk {
+        background-color: cornsilk;
+    }
+    
+    .OrangeRed {
+        background-color: OrangeRed;
+    }
+    
+    .Silver {
+        background-color: Silver;
+    }
+    
+    body {
+        background-image: url('星空.jpg');
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-color: #000000;
+    }
+</style>
+
+<script>
+    var Row, Col, row = 5,
+        col = 5,
+        size = 50,
+        Square, book, head, tail, x, y, bu, f, move = null,
+        counted = false;
+    var result = document.getElementById('result');
+
+    //清除行列值
+    function randomRowandCol() {
+        //获取行列值
+        Row = document.getElementById('row');
+        Col = document.getElementById('col');
+        Row.value = parseInt(Math.random() * 29 + 2);
+        Col.value = parseInt(Math.random() * 29 + 2);
+    }
+
+    //定制迷宫大小
+    var change = function() {
+        counted = false;
+        if (move != null)
+            clearInterval(move);
+        var maze = document.getElementById('maze');
+        childs = maze.childNodes;
+        //清除之前的迷宫
+        result.innerHTML = '';
+        for (var i = 0; i < childs.length; i++) {
+            maze.removeChild(childs[i]);
+            i--;
+        }
+        maze.style.width = col * size + 'px';
+        maze.style.height = row * size + 'px';
+        maze.style.border = '3px solid black';
+
+        //向迷宫内添加方格
+        Square = new Array();
+        for (var i = 0; i < row; i++) {
+            Square[i] = new Array();
+            for (var j = 0; j < col; j++) {
+                Square[i][j] = document.createElement('div');
+                Square[i][j].className = 'square';
+                var black = parseInt(Math.random() * 4);
+                if (black == 1)
+                    Square[i][j].style.background = 'black';
+
+                Square[i][j].style.left = j * size + 'px';
+                Square[i][j].style.top = i * size + 'px';
+                maze.appendChild(Square[i][j]);
+            }
+        }
+        Square[0][0].style.background = 'CornflowerBlue';
+        Square[row - 1][col - 1].style.background = 'OrangeRed';
+    }
+
+    //复合语句不能省略color
+    var isBlack = function(div) {
+        return div.style.backgroundColor == 'black';
+    }
+
+    //清除book标记
+    clearbook = function() {
+        book = new Array();
+        for (var i = 0; i < row; i++) {
+            book[i] = new Array();
+            for (var j = 0; j < col; j++)
+                book[i][j] = 0;
+        }
+    }
+
+    //计算(核心算法)
+    var calculation = function() {
+        if (counted) return;
+        counted = true;
+        clearbook();
+        var flag = [
+            [0, 1],
+            [1, 0],
+            [0, -1],
+            [-1, 0]
+        ];
+        head = 0;
+        tail = 1;
+        x = new Array();
+        y = new Array();
+        bu = new Array();
+        f = new Array();
+        book[0][0] = 1;
+        x[0] = y[0] = bu[0] = f[0] = 0;
+        var seekEnd = false;
+        while (head < tail && seekEnd == false) {
+            var dx, dy;
+            for (var i = 0; i < 4; i++) {
+                dx = x[head] + flag[i][0];
+                dy = y[head] + flag[i][1];
+                if (dx >= 0 && dy >= 0 && dx < row && dy < col && book[dx][dy] == 0 &&
+                    isBlack(Square[dx][dy]) == false) {
+                    book[dx][dy] = 1;
+                    x[tail] = dx;
+                    y[tail] = dy;
+                    bu[tail] = bu[head] + 1;
+                    f[tail] = head;
+                    tail++;
+                    if (dx == row - 1 && dy == col - 1) {
+                        seekEnd = true;
+                        break;
+                    }
+                }
+            }
+            head++;
+        }
+
+        //路径渲染
+        function seekwalk(father) {
+            var queue = [];
+            while (father != f[father]) {
+                queue.push(father);
+                father = f[father];
+            }
+            var index = 0;
+            queue.reverse();
+            move = setInterval(function() {
+                if (index == queue.length - 1) clearInterval(move);
+                Square[x[queue[index]]][y[queue[index]]].style.background = 'Silver';
+                Square[x[queue[index]]][y[queue[index]]].innerHTML = '<span>' + bu[queue[index]] + '</span>';
+                console.log(x[queue[index]] + ' ' + y[queue[index]] + ' ' + bu[queue[index]]);
+                index++;
+            }, 100);
+        }
+
+        if (seekEnd == false) {
+            result.innerHTML = '<span>到不了终点</span>';
+            alert('到不了终点！');
+        } else {
+            seekwalk(tail - 1);
+            result.innerHTML = '<span>共计走了' + bu[tail - 1] + '步</span>';
+        }
+    }
+
+    change();
+    var checkRowandCol = function() {
+        //获取行列值
+        Row = document.getElementById('row');
+        Col = document.getElementById('col');
+
+        if (Row.value < 2 || Row.value > 30 || Col.value < 2 || Col.value > 30) {
+            alert('行列数应在2~30！');
+            return;
+        }
+        row = Row.value;
+        col = Col.value;
+        change();
+    }
+</script>
+
+</html>
