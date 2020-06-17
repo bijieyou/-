@@ -12,7 +12,6 @@
             background-repeat: no-repeat;
             background-size: cover;
             background-color: black;
-
         }
         
         .fix {
@@ -174,13 +173,11 @@
             //点击加快
             var accelerate = document.getElementById('accelerate');
             var move = null;
-            var speed = 100;
+            var speed = 104;
             accelerate.onclick = function() {
-                    if (move == null)
+                    if (move == null || speed < 2)
                         return;
-                    speed = speed > 20 ? speed - 20 : speed;
-                    speed = speed > 5 ? speed - 2 : speed;
-
+                    speed = parseInt(speed / 2);
                     clearInterval(move);
                     move = setInterval(function() {
                         startmove();
@@ -207,7 +204,7 @@
             slow.onclick = function() {
                 if (move == null)
                     return;
-                speed = speed < 500 ? speed + 20 : speed;
+                speed = parseInt(speed * 2);
                 clearInterval(move);
                 move = setInterval(function() {
                     startmove();
