@@ -18,13 +18,47 @@
         background-color: burlywood;
         margin-left: 20px;
     }
+    
+    a {
+        text-decoration: none;
+    }
+    
+    .star {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background-color: seashell;
+        position: absolute;
+    }
+    
+    #body {
+        background-image: url('星空.jpg');
+        background-color: black;
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
 </style>
 
-<body>
+<script>
+    onload = function() {
+        var x, y, T = 100,
+            star;
+        var body = document.getElementById('body');
+
+        while (T--) {
+            star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = parseInt(Math.random() * 1400) + 'px';
+            star.style.top = parseInt(Math.random() * 800) + 'px';
+            body.appendChild(star);
+        }
+    }
+</script>
+
+<body id='body'>
     <div>
         <a href="迷宫.html"><button>迷宫</button></a>
         <a href="playblock.html"><button>打砖块</button></a>
-
     </div>
 </body>
 
