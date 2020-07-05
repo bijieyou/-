@@ -141,13 +141,10 @@
         if (move != null)
             clearInterval(move);
         var maze = document.getElementById('maze');
-        childs = maze.childNodes;
         //清除之前的迷宫
         result.innerHTML = '';
-        for (var i = 0; i < childs.length; i++) {
-            maze.removeChild(childs[i]);
-            i--;
-        }
+        maze.innerHTML = '';
+
         maze.style.width = col * size + 'px';
         maze.style.height = row * size + 'px';
         maze.style.border = '3px solid black';
