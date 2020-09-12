@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+<style>
+    * {
+        margin: 0px;
+        padding: 0px;
+    }
+    
+    .outline {
+        position: absolute;
+        left: calc(50% - 300px);
+        top: calc(50% - 300px);
+        width: 600px;
+        height: 600px;
+        border: black 1px solid;
+        background: linear-gradient(to left top, red, yellow);
+    }
+    
+    .head {
+        background: linear-gradient(to right bottom, red, yellow);
+        height: 70px;
+        line-height: 70px;
+        text-align: center;
+    }
+    
+    .body {
+        height: 500px;
+    }
+    
+    .body::after {
+        content: '';
+        display: block;
+        clear: both;
+    }
+    
+    .body ul {
+        float: left;
+        box-sizing: border-box;
+        width: 200px;
+        border-right: burlywood 1px solid;
+        height: 490px;
+        overflow: scroll;
+    }
+    
+    .bodcen {
+        float: left;
+        position: relative;
+        box-sizing: border-box;
+        height: 490px;
+        width: 400px;
+        border-right: burlywood 1px solid;
+        text-align: center;
+        color: white;
+    }
+    
+    .bodcen img {
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        display: block;
+        position: absolute;
+        top: calc(50% - 150px);
+        left: calc(50% - 150px);
+    }
+    
+    @keyframes myfirst {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+    
+    .normalrotate {
+        animation: myfirst 5s linear infinite;
+    }
+    
+    .body ul li {
+        position: relative;
+        list-style: none;
+        height: 30px;
+        line-height: 30px;
+        border-bottom: springgreen 1px solid;
+        text-align: center;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+    
+    .body ul li span {
+        position: absolute;
+        left: 80%;
+    }
+    
+    a {
+        text-decoration: none;
+    }
+    
+    .tail audio {
+        width: 600px;
+        margin-top: -25px;
+    }
+    
+    .transparent {
+        background: white;
+        border: 1px white solid;
+        cursor: pointer;
+    }
+    
+    .return {
+        color: crimson;
+        font-size: 20px;
+        font-style: italic;
+    }
+    
+    video {
+        border: transparent 1px solid;
+    }
+</style>
+
+<body>
+    <div id="app">
+        <div class="outline">
+            <div class="head">
+                <input type="text" v-model='searchimf' placeholder="请输入你想要查询的歌曲" @keyup.enter='search'>
+                <input type="button" value="搜索" @click='search'>
+            </div>
+            <div class="body">
+                <ul>
+                    <li v-for="item in list"><a href="#" @click='playMusic(item.id,item.name)'>{{item.name}}</a>
+                        <span v-if='item.mvid!=0'><button  class="transparent" @click='playMv(item.mvid)'>mv</button></span>
+                    </li>
+                </ul>
+                <div class="bodcen">
+                    <h3>{{musicName}}</h3>
+                    <img :src="imgUrl" :alt="musicName" :class="{normalrotate:isplaying}">
+                </div>
+            </div>
+
+            <div class="tail">
+                <audio @play='play' @pause='pause' :src="musicUrl" controls autoplay loop></audio>
+            </div>
+        </div>
+
+        <div class="outline" v-show='mvPlay'>
+            <a href="#" class="return" @click='rtn'>点我返回</a>
+            <video :src="mvUrl" controls width="600" height="570" autoplay>
+                
+            </video>
+        </div>
+    </div>
+</body>
+
+<script>
+    let app = new Vue({
+        el: '#app',
+        data: {
+            searchimf: '薛之谦',
+            list: [],
+            musicUrl: '',
+            musicName: '',
+            imgUrl: 'https://p2.music.126.net/HvB44MNINoLar8HFbRjIGQ==/109951165142435842.jpg',
+            hotComments: [],
+            isplaying: false,
+            mvPlay: false,
+            mvUrl: '',
+
+        },
+        methods: {
+            search: function() {
+                axios.get(`https://autumnfish.cn/search?keywords=${this.searchimf}`).then(
+                    (res) => {
+                        this.list = res.data.result.songs;
+                    },
+                    (err) => {});
+            },
+            playMusic: function(musicId, musicName) {
+                axios.get(`https://autumnfish.cn/song/url?id=${musicId}`)
+                    .then(
+                        (res) => {
+                            this.musicUrl = res.data.data[0].url;
+                        },
+                        (err) => {}
+                    );
+                axios.get(`https://autumnfish.cn/song/detail?ids=${musicId}`)
+                    .then(
+                        (res) => {
+                            this.imgUrl = res.data.songs[0].al.picUrl;
+                            this.musicName = musicName;
+                            console.log(this.imgUrl);
+                        },
+                        (err) => {}
+                    );
+            },
+
+            play: function() {
+                this.isplaying = true;
+            },
+            pause: function() {
+                this.isplaying = false;
+            },
+
+            playMv: function(mvId) {
+                this.mvPlay = true;
+                axios.get(`https://autumnfish.cn/mv/url?id=${mvId}`)
+                    .then(
+                        (res) => {
+                            this.mvUrl = res.data.data.url;
+                        },
+                        (err) => {}
+                    );
+                this.musicUrl = '';
+            },
+            rtn: function() {
+                this.mvUrl = '';
+                this.mvPlay = false;
+            }
+
+        },
+    });
+
+    onload = function() {
+        app.search();
+    }
+</script>
+
+</html>
