@@ -260,9 +260,9 @@
                 y += speedy;
                 ball.style.left = x + 'px';
                 ball.style.top = y + 'px';
-                if (x <= 0 || x >= 380) speedx *= -1;
-                if (y <= 10) speedy *= -1;
-                if (collide(ball, tray))
+                if (x <= 0 && speedx<0 || x >= 380 && speedx>0) speedx *= -1;
+                if (y <= 10 && speedy<0) speedy *= -1;
+                if (collide(ball, tray) && speedy>0)
                     speedy *= -1;
 
                 if (y >= 580) {

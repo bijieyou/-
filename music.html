@@ -100,13 +100,18 @@
         overflow: hidden;
     }
     
-    .body ul li span {
+    .body ul li .mv {
         position: absolute;
         left: 80%;
     }
     
-    a {
-        text-decoration: none;
+    .music-item {
+        display: inline-block;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        max-width: 90px;
+        cursor: pointer;
     }
     
     .tail audio {
@@ -145,8 +150,15 @@
             </div>
             <div class="body">
                 <ul>
-                    <li v-for="item in list"><a href="#" @click='playMusic(item.id,item.name)'>{{item.name}}</a>
-                        <span v-if='item.mvid!=0'><button  class="transparent" @click='playMv(item.mvid)'>mv</button></span>
+                    <li v-for="item in list">
+                        <span 
+                           class="music-item"
+                           :title="item.name" 
+                           @click='playMusic(item.id,item.name)'>{{item.name}}
+                        </span>
+                        <span 
+                          class="mv"
+                          v-if='item.mvid!=0'><button  class="transparent" @click='playMv(item.mvid)'>mv</button></span>
                     </li>
                 </ul>
                 <div class="bodcen">
